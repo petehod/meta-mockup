@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 interface AdPreviewProps {
   mockup: Partial<AdMockup>;
   brand: Brand | null;
-  previewRef?: RefObject<HTMLDivElement>;
+  previewRef: RefObject<HTMLDivElement>;
   brandName?: string;
   mockupName?: string;
 }
@@ -40,23 +40,12 @@ export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(
         : primaryText;
 
     // Use previewRef if provided, otherwise use the forwarded ref
-    const containerRef = previewRef || ref;
 
     const handleExport = async () => {
-      // Get the actual DOM element from the ref
-      let targetElement: HTMLDivElement | null = null;
-      if (containerRef) {
-        if (typeof containerRef === "function") {
-          // Can't get element from callback ref, need to use a different approach
-          return;
-        } else {
-          targetElement = containerRef.current;
-        }
-      }
-      if (!targetElement) return;
+      if (!previewRef.current) return;
 
       try {
-        const dataUrl = await toPng(targetElement, {
+        const dataUrl = await toPng(previewRef.current, {
           cacheBust: true,
           pixelRatio: 2,
         });
@@ -83,7 +72,6 @@ export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(
         });
       }
     };
-
     // Load media from IndexedDB
     useEffect(() => {
       // Reset aspect ratio when image URL changes
@@ -154,7 +142,7 @@ export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(
     return (
       <div className="flex justify-center">
         <div
-          ref={containerRef}
+          ref={previewRef}
           className="w-[375px] bg-white rounded-lg shadow-sm border"
         >
           <div className="p-3 flex items-center gap-3 border-b">
