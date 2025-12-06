@@ -178,6 +178,23 @@ export default function Home() {
   };
 
   const handleLoadMockup = (mockupId: string) => {
+    // If "__new__" is selected, clear the form
+    if (mockupId === "__new__") {
+      setCurrentMockup({
+        platform: "facebook",
+        primaryText: "",
+        headline: "",
+        description: "",
+        imageUrl: "",
+        ctaLabel: "Learn more",
+        name: "",
+        brandId: selectedBrandId || undefined,
+      });
+      // Update URL to remove mockupId
+      updateQueryParams(selectedBrandId, null);
+      return;
+    }
+
     const mockup = mockups.find((m) => m.id === mockupId);
     if (mockup) {
       setCurrentMockup(mockup);

@@ -139,7 +139,7 @@ export function AdForm({
           <div className="space-y-2">
             <Label htmlFor="load-mockup">Load Saved Mockup</Label>
             <Select
-              value={mockup.id || ""}
+              value={mockup.id || "__new__"}
               onValueChange={onLoadMockup}
               disabled={disabled}
             >
@@ -147,6 +147,7 @@ export function AdForm({
                 <SelectValue placeholder="Select a mockup to load..." />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="__new__">Create New Mockup</SelectItem>
                 {mockups.map((m) => (
                   <SelectItem key={m.id} value={m.id}>
                     {m.name} ({m.platform})
