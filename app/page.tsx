@@ -16,6 +16,9 @@ import { AdPreview } from "@/components/ad-preview";
 import { ExportButton } from "@/components/export-button";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
+import Link from "next/link";
+import Logo from "@/components/ui/logo";
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -190,8 +193,8 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Ad Mockup Studio
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">
+              <Logo />
             </h1>
             <p className="mt-2 text-gray-600">
               Create, save, and export beautiful Facebook and Instagram ad

@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Save, Upload } from "lucide-react";
+import Image from "next/image";
 
 interface AdFormProps {
   mockup: Partial<AdMockup>;
@@ -233,50 +234,7 @@ export function AdForm({
                 disabled={disabled}
               />
             </div>
-            {displayImageUrl && (
-              <div className="mt-3 pt-3 border-t">
-                <div className="text-xs text-gray-500 mb-2">Current media:</div>
-                {displayImageUrl.startsWith("blob:") ||
-                displayImageUrl.startsWith("data:image/") ||
-                (displayImageUrl.startsWith("http") &&
-                  displayImageUrl.match(/\.(jpg|jpeg|png|gif|webp)/i)) ? (
-                  <img
-                    src={displayImageUrl}
-                    alt="Ad creative"
-                    className="max-h-32 w-auto rounded"
-                  />
-                ) : displayImageUrl.startsWith("data:video/") ||
-                  (displayImageUrl.startsWith("http") &&
-                    displayImageUrl.match(/\.(mp4|webm|ogg|mov)/i)) ||
-                  displayImageUrl.startsWith("blob:") ? (
-                  <video
-                    src={displayImageUrl}
-                    className="max-h-32 w-auto rounded"
-                    controls={false}
-                  />
-                ) : (
-                  <div className="text-xs text-gray-400 truncate">
-                    {mockup.imageUrl}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
-          <Input
-            id="image-url"
-            value={mockup.imageUrl || ""}
-            onChange={(e) => {
-              const value = e.target.value;
-              updateField("imageUrl", value);
-              // If it's a URL (not a media ID), update display immediately
-              if (!isMediaId(value)) {
-                setDisplayImageUrl(value);
-              }
-            }}
-            placeholder="Or enter a URL..."
-            disabled={disabled}
-            className="mt-2"
-          />
         </div>
 
         <div className="space-y-2">
