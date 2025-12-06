@@ -218,7 +218,7 @@ export function AdForm({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-primary hover:underline disabled:opacity-50"
+                  className="text-primary underline disabled:opacity-50"
                   disabled={disabled}
                 >
                   browse

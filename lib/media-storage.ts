@@ -84,6 +84,38 @@ export async function getMediaURL(mediaId: string): Promise<string | null> {
 }
 
 /**
+ * Get the media type (MIME type) for a media ID
+ */
+export async function getMediaType(mediaId: string): Promise<string | null> {
+  if (!mediaId || !mediaId.startsWith("media_")) {
+    // For non-media IDs, try to infer from the URL
+    if (mediaId.startsWith("data:video/")) return "video";
+    if (mediaId.startsWith("data:image/")) return "image";
+    if (mediaId.match(/\.(mp4|webm|ogg|mov)/i)) return "video";
+    if (mediaId.match(/\.(jpg|jpeg|png|gif|webp|svg)/i)) return "image";
+    return null;
+  }
+
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.get(mediaId);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const file = request.result;
+      if (file && file.type) {
+        resolve(file.type);
+      } else {
+        resolve(null);
+      }
+    };
+  });
+}
+
+/**
  * Revoke an object URL to free memory
  */
 export function revokeMediaURL(url: string): void {

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, forwardRef, useEffect } from "react";
+import { useState, forwardRef, useEffect, useRef } from "react";
 import { Brand, AdMockup } from "@/lib/types";
-import { getMediaURL, isMediaId } from "@/lib/media-storage";
+import { getMediaURL, isMediaId, getMediaType } from "@/lib/media-storage";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 
@@ -16,6 +16,10 @@ export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(
     const [isExpanded, setIsExpanded] = useState(false);
     const [displayImageUrl, setDisplayImageUrl] = useState<string>("");
     const [displayLogoUrl, setDisplayLogoUrl] = useState<string>("");
+    const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+    const [isVideo, setIsVideo] = useState<boolean>(false);
+    const imageRef = useRef<HTMLImageElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
     const primaryText = mockup.primaryText || "";
     const shouldCollapse = primaryText.length > 125;
     const displayText =
@@ -25,18 +29,56 @@ export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(
 
     // Load media from IndexedDB
     useEffect(() => {
-      if (mockup.imageUrl) {
-        if (isMediaId(mockup.imageUrl)) {
-          getMediaURL(mockup.imageUrl).then((url) => {
-            if (url) setDisplayImageUrl(url);
-          });
-        } else {
-          setDisplayImageUrl(mockup.imageUrl);
-        }
+      // Reset aspect ratio when image URL changes
+      setAspectRatio(null);
+      setIsVideo(false);
+
+      const imageUrl = mockup.imageUrl;
+      if (imageUrl) {
+        // Determine if it's a video
+        const checkVideoType = async () => {
+          if (isMediaId(imageUrl)) {
+            const mediaType = await getMediaType(imageUrl);
+            setIsVideo(mediaType?.startsWith("video/") || false);
+            const url = await getMediaURL(imageUrl);
+            if (url) {
+              setDisplayImageUrl(url);
+            }
+          } else {
+            // Check URL patterns for video
+            const isVideoUrl =
+              imageUrl.startsWith("data:video/") ||
+              (imageUrl.startsWith("http") &&
+                imageUrl.match(/\.(mp4|webm|ogg|mov)/i));
+            setIsVideo(!!isVideoUrl);
+            setDisplayImageUrl(imageUrl);
+          }
+        };
+        checkVideoType();
       } else {
         setDisplayImageUrl("");
       }
     }, [mockup.imageUrl]);
+
+    // Calculate aspect ratio when image loads
+    const handleImageLoad = () => {
+      if (imageRef.current) {
+        const { naturalWidth, naturalHeight } = imageRef.current;
+        if (naturalWidth && naturalHeight) {
+          setAspectRatio(naturalWidth / naturalHeight);
+        }
+      }
+    };
+
+    // Calculate aspect ratio when video loads
+    const handleVideoLoadedMetadata = () => {
+      if (videoRef.current) {
+        const { videoWidth, videoHeight } = videoRef.current;
+        if (videoWidth && videoHeight) {
+          setAspectRatio(videoWidth / videoHeight);
+        }
+      }
+    };
 
     useEffect(() => {
       if (brand?.logoUrl) {
@@ -104,22 +146,40 @@ export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(
           )}
 
           {displayImageUrl && (
-            <div className="w-full aspect-square bg-gray-100 overflow-hidden">
-              {displayImageUrl.startsWith("blob:") ||
-              displayImageUrl.startsWith("data:video/") ||
-              (displayImageUrl.startsWith("http") &&
-                displayImageUrl.match(/\.(mp4|webm|ogg|mov)/i)) ? (
+            <div
+              className="w-full bg-gray-100 overflow-hidden"
+              style={
+                aspectRatio
+                  ? {
+                      aspectRatio: aspectRatio.toString(),
+                    }
+                  : {
+                      aspectRatio: "1",
+                      minHeight: "200px",
+                    }
+              }
+            >
+              {isVideo ? (
                 <video
+                  key={displayImageUrl}
+                  ref={videoRef}
                   src={displayImageUrl}
                   className="w-full h-full object-cover"
                   controls
                   playsInline
+                  onLoadedMetadata={handleVideoLoadedMetadata}
                 />
               ) : (
                 <img
+                  key={displayImageUrl}
+                  ref={imageRef}
                   src={displayImageUrl}
                   alt="Ad creative"
                   className="w-full h-full object-cover"
+                  onLoad={handleImageLoad}
+                  onError={() => {
+                    console.error("Failed to load image:", displayImageUrl);
+                  }}
                 />
               )}
             </div>
