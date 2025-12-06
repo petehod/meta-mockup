@@ -1,0 +1,97 @@
+"use client";
+
+import { useState, forwardRef } from "react";
+import { Brand, AdMockup } from "@/lib/types";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal } from "lucide-react";
+
+interface AdPreviewProps {
+  mockup: Partial<AdMockup>;
+  brand: Brand | null;
+}
+
+export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(({ mockup, brand }, ref) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const primaryText = mockup.primaryText || "";
+  const shouldCollapse = primaryText.length > 150;
+  const displayText = shouldCollapse && !isExpanded ? primaryText.slice(0, 150) + "..." : primaryText;
+
+  return (
+    <div className="flex justify-center">
+      <div ref={ref} className="w-[375px] bg-white rounded-lg shadow-sm border">
+        <div className="p-3 flex items-center gap-3 border-b">
+          <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+            {brand?.logoUrl ? (
+              <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                Logo
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm">{brand?.name || "Brand Name"}</div>
+            <div className="text-xs text-gray-500">Sponsored</div>
+          </div>
+          <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {primaryText && (
+          <div className="px-3 pt-3 pb-2">
+            <p className="text-sm whitespace-pre-wrap break-words">{displayText}</p>
+            {shouldCollapse && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-sm text-gray-500 hover:text-gray-700 font-medium mt-1"
+              >
+                {isExpanded ? "See less" : "See more"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {mockup.imageUrl && (
+          <div className="w-full aspect-square bg-gray-100 overflow-hidden">
+            <img src={mockup.imageUrl} alt="Ad creative" className="w-full h-full object-cover" />
+          </div>
+        )}
+
+        <div className="p-3 border-t bg-gray-50 flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="text-xs text-gray-500 mb-1">{brand?.name?.toLowerCase().replace(/\s+/g, "") || "brand"}.com</div>
+            {mockup.headline && <div className="font-semibold text-sm mb-1">{mockup.headline}</div>}
+            {mockup.description && <div className="text-sm text-gray-600">{mockup.description}</div>}
+          </div>
+          <Button className="flex-shrink-0 mt-1" size="sm" variant="secondary">
+            {mockup.ctaLabel || "Learn more"}
+          </Button>
+        </div>
+
+        {mockup.platform === "instagram" && (
+          <div className="px-3 py-2 border-t flex items-center gap-4 text-gray-600">
+            <button className="hover:text-gray-900">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+            <button className="hover:text-gray-900">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </button>
+            <button className="hover:text-gray-900">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
+AdPreview.displayName = "AdPreview";
