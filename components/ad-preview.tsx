@@ -1,18 +1,29 @@
 "use client";
 
-import { useState, forwardRef, useEffect, useRef } from "react";
+import { useState, forwardRef, useEffect, useRef, RefObject } from "react";
 import { Brand, AdMockup } from "@/lib/types";
 import { getMediaURL, isMediaId, getMediaType } from "@/lib/media-storage";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Download } from "lucide-react";
+import { toPng } from "html-to-image";
+import { useToast } from "@/hooks/use-toast";
 
 interface AdPreviewProps {
   mockup: Partial<AdMockup>;
   brand: Brand | null;
+  previewRef?: RefObject<HTMLDivElement>;
+  brandName?: string;
+  mockupName?: string;
 }
 
 export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(
-  ({ mockup, brand }, ref) => {
+  ({ mockup, brand, previewRef, brandName, mockupName }, ref) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [displayImageUrl, setDisplayImageUrl] = useState<string>("");
     const [displayLogoUrl, setDisplayLogoUrl] = useState<string>("");
@@ -20,12 +31,58 @@ export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(
     const [isVideo, setIsVideo] = useState<boolean>(false);
     const imageRef = useRef<HTMLImageElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const { toast } = useToast();
     const primaryText = mockup.primaryText || "";
     const shouldCollapse = primaryText.length > 125;
     const displayText =
       shouldCollapse && !isExpanded
         ? primaryText.slice(0, 125) + "..."
         : primaryText;
+
+    // Use previewRef if provided, otherwise use the forwarded ref
+    const containerRef = previewRef || ref;
+
+    const handleExport = async () => {
+      // Get the actual DOM element from the ref
+      let targetElement: HTMLDivElement | null = null;
+      if (containerRef) {
+        if (typeof containerRef === "function") {
+          // Can't get element from callback ref, need to use a different approach
+          return;
+        } else {
+          targetElement = containerRef.current;
+        }
+      }
+      if (!targetElement) return;
+
+      try {
+        const dataUrl = await toPng(targetElement, {
+          cacheBust: true,
+          pixelRatio: 2,
+        });
+
+        const link = document.createElement("a");
+        const filename = `${brandName || "ad"}-${mockupName || "mockup"}.png`
+          .toLowerCase()
+          .replace(/[^a-z0-9-]/g, "-")
+          .replace(/-+/g, "-");
+        link.download = filename;
+        link.href = dataUrl;
+        link.click();
+
+        toast({
+          title: "Export successful",
+          description: "Your ad mockup has been downloaded as PNG",
+        });
+      } catch (error) {
+        console.error("Error exporting image:", error);
+        toast({
+          title: "Export failed",
+          description: "There was an error exporting your mockup",
+          variant: "destructive",
+        });
+      }
+    };
 
     // Load media from IndexedDB
     useEffect(() => {
@@ -97,7 +154,7 @@ export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(
     return (
       <div className="flex justify-center">
         <div
-          ref={ref}
+          ref={containerRef}
           className="w-[375px] bg-white rounded-lg shadow-sm border"
         >
           <div className="p-3 flex items-center gap-3 border-b">
@@ -120,13 +177,23 @@ export const AdPreview = forwardRef<HTMLDivElement, AdPreviewProps>(
               </div>
               <div className="text-xs text-gray-500">Sponsored</div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 flex-shrink-0"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExport}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PNG
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {primaryText && (

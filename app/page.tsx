@@ -13,7 +13,6 @@ import {
 import { BrandSelector } from "@/components/brand-selector";
 import { AdForm } from "@/components/ad-form";
 import { AdPreview } from "@/components/ad-preview";
-import { ExportButton } from "@/components/export-button";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
@@ -232,14 +231,12 @@ export default function Home() {
                       ref={previewRef}
                       mockup={currentMockup}
                       brand={selectedBrand}
+                      previewRef={previewRef}
+                      brandName={selectedBrand?.name}
+                      mockupName={currentMockup.name}
                     />
                   </div>
                 </div>
-                <ExportButton
-                  previewRef={previewRef}
-                  brandName={selectedBrand?.name}
-                  mockupName={currentMockup.name}
-                />
               </div>
             </div>
           </div>
