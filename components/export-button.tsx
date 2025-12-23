@@ -46,45 +46,45 @@ export function ExportButton({
       return;
     }
 
-      // Convert blob URLs to data URLs for stability
-      await Promise.all(
-        images.map(async (img) => {
-          if (!img.isConnected) {
-            return;
-          }
+    // Convert blob URLs to data URLs for stability
+    await Promise.all(
+      images.map(async (img) => {
+        if (!img.isConnected) {
+          return;
+        }
 
-          // Convert blob URLs to data URLs before export
-          if (img.src && img.src.startsWith("blob:")) {
-            try {
-              const dataUrl = await convertBlobToDataUrl(img.src);
-              // Set up load handler before changing src
-              await new Promise<void>((resolve, reject) => {
-                const timeout = setTimeout(() => {
-                  reject(new Error("Timeout loading converted image"));
-                }, 5000);
-                const onLoad = () => {
-                  clearTimeout(timeout);
-                  img.removeEventListener("load", onLoad);
-                  img.removeEventListener("error", onError);
-                  resolve();
-                };
-                const onError = () => {
-                  clearTimeout(timeout);
-                  img.removeEventListener("load", onLoad);
-                  img.removeEventListener("error", onError);
-                  reject(new Error("Failed to load converted image"));
-                };
-                img.addEventListener("load", onLoad);
-                img.addEventListener("error", onError);
-                img.src = dataUrl;
-              });
-            } catch (err) {
-              console.warn("Failed to convert blob URL to data URL:", err);
-              throw err;
-            }
+        // Convert blob URLs to data URLs before export
+        if (img.src && img.src.startsWith("blob:")) {
+          try {
+            const dataUrl = await convertBlobToDataUrl(img.src);
+            // Set up load handler before changing src
+            await new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                reject(new Error("Timeout loading converted image"));
+              }, 5000);
+              const onLoad = () => {
+                clearTimeout(timeout);
+                img.removeEventListener("load", onLoad);
+                img.removeEventListener("error", onError);
+                resolve();
+              };
+              const onError = () => {
+                clearTimeout(timeout);
+                img.removeEventListener("load", onLoad);
+                img.removeEventListener("error", onError);
+                reject(new Error("Failed to load converted image"));
+              };
+              img.addEventListener("load", onLoad);
+              img.addEventListener("error", onError);
+              img.src = dataUrl;
+            });
+          } catch (err) {
+            console.warn("Failed to convert blob URL to data URL:", err);
+            throw err;
           }
-        })
-      );
+        }
+      })
+    );
 
     // Now wait for all images and videos to be ready
     return new Promise((resolve, reject) => {
